@@ -1,34 +1,7 @@
 -- constants.lua
 
-local class = require "lib.middleclass"
 local Field = require "lib.field"
 local Message = require "lib.message"
-
-MESSAGE_TYPES = {
-    [1] = "USER_QUIT",  -- empty, ff
-    [2] = "USER_JOIN",
-    [3] = "USER_INFO",
-    [4] = "SERVER_STATUS",
-    [5] = "SERVER_ACK",
-    [6] = "CLIENT_ACK",
-    [7] = "GLOBAL_CHAT",    -- empty
-    [8] = "GAME_CHAT",      -- empty
-    [9] = "KEEP_ALIVE",
-    [10] = "GAME_CREATE",   -- empty, ff
-    [11] = "GAME_QUIT",     -- empty, ff
-    [12] = "GAME_JOIN",     -- empty, 00, ff
-    [13] = "PLAYER_INFO",
-    [14] = "GAME_STATUS",
-    [15] = "GAME_KICK",
-    [16] = "GAME_CLOSE",
-    [17] = "GAME_START",    -- ff
-    [18] = "GAME_INFO",     -- ??/same?
-    [19] = "GAME_CACHE",    -- ??/same?
-    [20] = "GAME_DROP",     -- empty, 00
-    [21] = "GAME_READY",    -- ??/same
-    [22] = "SERVER_REJECT",
-    [23] = "SERVER_NOTICE"
-}
 
 CONNECTION_TYPE = {
     [1] = "LAN",
@@ -39,102 +12,208 @@ CONNECTION_TYPE = {
     [6] = "Bad"
 }
 
-KAILLERA_MESSAGES = {
+GAME_STATUS = {
+    [0] = "Waiting",
+    [1] = "Playing",
+    [2] = "Syncing"
+}
+
+RAW_KAILLERA = {
+    client_hello = "HELLO0.83",
+    client_ping = "PING",
+    server_hello = "HELLOD00D([0-9]+)",
+    server_pong = "PONG",
+}
+
+TYPES_KAILLERA = {
     [0x1] = Message:new({
-        name = "USER_QUIT",
-        struct = {
-            Field:new({name = "Username (unused by client)", type = ftypes.STRINGZ}),
-            Field:new({name = "UserID (unused by client)", type = ftypes.UINT8, size = 2, base = base.HEX}),
-            Field:new({name = "Message", type = ftypes.STRINGZ}),
+        name = "CLIENT_QUIT",
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRINGZ, client = 0}),
+            Field:new({name = "User ID", type = ftypes.UINT8, size = 2, base = base.HEX, client = 0}),
+            Field:new({name = "Quit Message", type = ftypes.STRINGZ}),
         }
     }),
     [0x2] = Message:new({
-        name = "USER_JOIN",
-        struct = {
+        name = "CLIENT_JOIN",
+        fields = {
             Field:new({name = "Username", type = ftypes.STRINGZ}),
-            Field:new({name = "UserID", type = ftypes.UINT8, size = 2, base = base.HEX}),
+            Field:new({name = "User ID", type = ftypes.UINT8, size = 2, base = base.HEX}),
             Field:new({name = "Ping (ms)", type = ftypes.UINT8, size = 4}),
             Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE}),
         }
     }),
     [0x3] = Message:new({
-        name = "USER_LOGIN",
-        struct = {
+        name = "CLIENT_INFO",
+        fields = {
             Field:new({name = "Username", type = ftypes.STRINGZ}),
-            Field:new({name = "Emulator", type = ftypes.STRINGZ}),
+            Field:new({name = "Emulator Name", type = ftypes.STRINGZ}),
             Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE}),
         }
     }),
-    -- TODO: does not load list of users and games
-    [0x4] = {
+    [0x4] = Message:new({
         name = "SERVER_STATUS",
-        struct = {
-            Field:new({name = "Empty", type = ftypes.STRINGZ}),
-            Field:new({name = "Number of Users", type = ftypes.UINT8, size = 4}),
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "Number of Players", type = ftypes.UINT8, size = 4}),
             Field:new({name = "Number of Games", type = ftypes.UINT8, size = 4}),
-        },
-    },
-    [0x5] = {
+            -- TODO: does not load list of users and games
+        }
+    }),
+    [0x5] = Message:new({
         name = "SERVER_ACK",
-        struct = {
-            Field:new({name = "Empty", type = ftypes.STRINGZ}),
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
             Field:new({name = "Unknown 0", type = ftypes.UINT8, size = 4}),
             Field:new({name = "Unknown 1", type = ftypes.UINT8, size = 4}),
             Field:new({name = "Unknown 2", type = ftypes.UINT8, size = 4}),
             Field:new({name = "Unknown 3", type = ftypes.UINT8, size = 4}),
-        },
-    },
-    [0x6] = {
+        }
+    }),
+    [0x6] = Message:new({
         name = "CLIENT_ACK",
-        struct = {
-            Field:new({name = "Empty", type = ftypes.STRINGZ}),
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
             Field:new({name = "Unknown 0", type = ftypes.UINT8, size = 4}),
             Field:new({name = "Unknown 1", type = ftypes.UINT8, size = 4}),
             Field:new({name = "Unknown 2", type = ftypes.UINT8, size = 4}),
             Field:new({name = "Unknown 3", type = ftypes.UINT8, size = 4}),
-        },
-    },
-    [0x7] = {
-        name = "GLOBAL_CHAT",
-        struct = {
-            Field:new({name = "Username (unused by client)", type = ftypes.STRINGZ}),
+        }
+    }),
+    [0x7] = Message:new({
+        name = "CHAT_GLOBAL",
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRINGZ, client = 0}),
             Field:new({name = "Message", type = ftypes.STRINGZ}),
-        },
-    },
-    [0x8] = {
-        name = "GAME_CHAT",
-        struct = {
-            Field:new({name = "Username (unused by client)", type = ftypes.STRINGZ}),
+        }
+    }),
+    [0x8] = Message:new({
+        name = "CHAT_GAME",
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRINGZ, client = 0}),
             Field:new({name = "Message", type = ftypes.STRINGZ}),
-        },
-    },
-    [0x9] = {
+        }
+    }),
+    [0x9] = Message:new({
         name = "KEEP_ALIVE",
-        struct = {
-            Field:new({name = "Empty", type = ftypes.STRINGZ}),
-        },
-    },
-    [0xA] = {
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+        }
+    }),
+    [0xA] = Message:new({
         name = "GAME_CREATE",
-        struct = {
-            Field:new({name = "Username (unused by client)", type = ftypes.STRINGZ}),
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRINGZ, client = 0}),
             Field:new({name = "Game Name", type = ftypes.STRINGZ}),
-            Field:new({name = "Emulator (unused by client)", type = ftypes.STRINGZ}),
-            Field:new({name = "GameID (unused by client)", type = ftypes.UINT8, size = 4}),
-        },
-    },
-    [0xB] = {
+            Field:new({name = "Emulator Name", type = ftypes.STRINGZ, client = 0}),
+            Field:new({name = "Game ID", type = ftypes.UINT8, size = 4, client = 0}),
+        }
+    }),
+    [0xB] = Message:new({
         name = "GAME_QUIT",
-        struct = {
-            Field:new({name = "Username (unused by client)", type = ftypes.STRINGZ}),
-            Field:new({name = "UserID (unused by client)", type = ftypes.UINT8, size = 2, base = base.HEX}),
-        },
-    },
-    [0x17] = {
-        name = "SERVER_NOTICE",
-        struct = {
-            Field:new({name = "'Server'", type = ftypes.STRINGZ}),
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRINGZ, client = 0}),
+            Field:new({name = "User ID", type = ftypes.UINT8, size = 2, client = 0}),
+        }
+    }),
+    [0xC] = Message:new({
+        name = "GAME_JOIN",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "Game ID", type = ftypes.UINT8, size = 4}),
+            Field:new({name = "Username", type = ftypes.STRINGZ, client = 0}),
+            Field:new({name = "Ping (ms)", type = ftypes.UINT8, size = 4, client = 0}),
+            Field:new({name = "User ID", type = ftypes.UINT8, size = 2, client = 0}),
+            Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE}),
+        }
+    }),
+    [0xD] = Message:new({
+        name = "GAME_PLAYER",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "Number of Players", type = ftypes.UINT8, size = 4}),
+            Field:new({name = "Username", type = ftypes.STRINGZ, client = 0}),
+            Field:new({name = "Ping (ms)", type = ftypes.UINT8, size = 4, client = 0}),
+            Field:new({name = "User ID", type = ftypes.UINT8, size = 2, client = 0}),
+            Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE}),
+        }
+    }),
+    [0xE] = Message:new({
+        name = "GAME_STATUS",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "Game ID", type = ftypes.UINT8, size = 4}),
+            Field:new({name = "Game Status", type = ftypes.UINT8, size = 1, valuestring = GAME_STATUS}),
+            Field:new({name = "Number of Players", type = ftypes.UINT8, size = 1}),
+            Field:new({name = "Maximum Players", type = ftypes.UINT8, size = 1}),
+        }
+    }),
+    [0xF] = Message:new({
+        name = "GAME_KICK",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "User ID", type = ftypes.UINT8, size = 2}),
+        }
+    }),
+    [0x10] = Message:new({
+        name = "GAME_CLOSE",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "Game ID", type = ftypes.UINT8, size = 4}),
+        }
+    }),
+    [0x11] = Message:new({
+        name = "GAME_START",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "Frame Delay", type = ftypes.UINT8, size = 2, client = 0}),
+            Field:new({name = "Player Number", type = ftypes.UINT8, size = 1, client = 0}),
+            Field:new({name = "Total Players", type = ftypes.UINT8, size = 1, client = 0}),
+        }
+    }),
+    [0x12] = Message:new({
+        name = "GAME_DATA",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "Length", type = ftypes.UINT8, size = 2}),
+            Field:new({name = "Data", type = ftypes.STRINGZ}),
+            -- TODO: parse data
+        }
+    }),
+    [0x13] = Message:new({
+        name = "GAME_CACHE",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+            Field:new({name = "Index", type = ftypes.UINT8, size = 1}),
+            -- TODO: ???
+        }
+    }),
+    [0x14] = Message:new({
+        name = "GAME_DROP",
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRINGZ, client = 0}),
+            Field:new({name = "Player Number", type = ftypes.UINT8, size = 1}),
+        }
+    }),
+    [0x15] = Message:new({
+        name = "GAME_READY",
+        fields = {
+            Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
+        }
+    }),
+    [0x16] = Message:new({
+        name = "SERVER_REJECT",
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRINGZ}),
+            Field:new({name = "User ID", type = ftypes.UINT8, size = 2}),
             Field:new({name = "Message", type = ftypes.STRINGZ}),
-        },
-    },
+        }
+    }),
+    [0x17] = Message:new({
+        name = "SERVER_NOTICE",
+        fields = {
+            Field:new({name = "'server'", type = ftypes.STRINGZ}),
+            Field:new({name = "Message", type = ftypes.STRINGZ}),
+        }
+    }),
 }
