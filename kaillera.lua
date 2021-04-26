@@ -2,14 +2,9 @@
 -- http://kaillera.com/
 
 require "lib.constants"
-
-local class = require "lib.middleclass"
-local Field = require "lib.field"
 local Message = require "lib.message"
-local inspect = require "lib.inspect"
 
 local kaillera = Proto("kaillera","Kaillera Middleware Protocol")
-
 kaillera.fields = {}
 local fields = kaillera.fields
 
@@ -22,11 +17,11 @@ fields.server_port  = ProtoField.stringz("kaillera.server_port", "Port")
 
 -- typed types
 fields.msg_count    = ProtoField.uint8("kaillera.cnt", "Messages")
-fields.msg_id       = ProtoField.uint16("kaillera.id", "Transaction ID")
+fields.msg_id       = ProtoField.uint16("kaillera.id", "Message ID")
 fields.msg_length   = ProtoField.uint16("kaillera.len", "Length")
-fields.msg_type     = ProtoField.uint8("kaillera.type", "Type", base.HEX, Message.static:getTypes(TYPES_KAILLERA))
+fields.msg_type     = ProtoField.uint8("kaillera.type", "Type", base.HEX, Message.static:buildMessageTypes(TYPES_KAILLERA))
 
-for message, proto in pairs(Message.static:buildProtoFields(TYPES_KAILLERA, "kaillera")) do
+for message, proto in pairs(Message.static:buildProtoFields(TYPES_KAILLERA, KAILLERA_PROTOCOL)) do
     fields[message] = proto
 end
 
@@ -34,6 +29,8 @@ local function hello_dood_heuristic(tvb, pinfo, tree)
     local message = tvb():range():stringz()
     local client_hello = string.match(message, RAW_KAILLERA.client_hello)
     local server_hello = string.match(message, RAW_KAILLERA.server_hello)
+
+    Message.static:buildProtoFields(TYPES_KAILLERA, "debug")
 
     if client_hello then
         -- just add the ports for now
@@ -54,12 +51,11 @@ local function hello_dood_heuristic(tvb, pinfo, tree)
     -- handle excess raw messages too (ping/pong)
     if string.match(message, RAW_KAILLERA.client_ping) then tree:add_le(fields.client_ping, message) end
     if string.match(message, RAW_KAILLERA.server_pong) then tree:add_le(fields.server_pong, message) end
-
     return false
 end
 
 function kaillera.dissector(tvb, pinfo, tree)
-    pinfo.cols.protocol = "Kaillera"
+    pinfo.cols.protocol = KAILLERA_PROTOCOL
     local payload = tree:add(kaillera, tvb())
 
     for _, message in pairs(RAW_KAILLERA) do
@@ -76,14 +72,16 @@ function kaillera.dissector(tvb, pinfo, tree)
     for i = 1, count:int() do
         local message = messages:add_le(fields.msg_id, tvb:range(offset, 2))
         local len = tvb:range(offset + 2, 2)
-        local type = tvb:range(offset + 4, 1)
-
         message:add_le(fields.msg_length, len)
-        local data = message:add_le(fields.msg_type, type)
 
+        local type = tvb:range(offset + 4, 1)
+        local data = message:add_le(fields.msg_type, type)
         local messageType = TYPES_KAILLERA[type:int()]
+
         if messageType then
+            messageType.protocol = KAILLERA_PROTOCOL
             messageType:dissect(kaillera.fields, tvb:range(offset + 4, len:le_uint()), data)
+            message:set_len(len:le_uint() + 4)
         end
 
         offset = offset + 4 + len:le_uint()
