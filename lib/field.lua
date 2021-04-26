@@ -15,7 +15,8 @@ function Field:initialize(args)
     self.hidden = args.hidden or 0
     self.parentId = args.parentId or 0
     self.server = args.server or 1
-    self.size = args.size or 0
+    self.size = args.size or nil
+    self.sizeOf = args.sizeOf or nil
 
     -- optional arguments for ProtoField
     self.valuestring = args.valuestring or nil
@@ -54,8 +55,13 @@ function Field:protoField(abbr)
     return ProtoField.new(self.name, abbr, self.type, self.valuestring, self.base, self.mask, self.desc)
 end
 
-function Field:setData(data)
-    self.realSize = (self.size ~= 0) and self.size or data:range():strsize()
+function Field:setData(data, trees)
+    local size = self.size
+    if trees and self.sizeOf then
+        size = self.size and self.size or trees[self.sizeOf].field.value:le_uint()
+    end
+
+    self.realSize = (size ~= 0) and size or data:range():strsize()
     self.value = data:range(0, self.realSize)
 end
 

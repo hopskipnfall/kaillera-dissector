@@ -38,7 +38,7 @@ TYPES_KAILLERA = {
     [0x1] = Message:new({
         name = "CLIENT_QUIT",
         fields = {
-            Field:new({name = "Username", type = ftypes.STRINGZ,  encoding = ENC_ISO_8859_1, client = 0}),
+            Field:new({name = "Username", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1, client = 0}),
             Field:new({name = "User ID", type = ftypes.UINT8, size = 2, base = base.HEX, client = 0}),
             Field:new({name = "Quit Message", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1}),
         }
@@ -74,7 +74,7 @@ TYPES_KAILLERA = {
                 Field:new({name = "Player Status", type = ftypes.UINT8, size = 1, valuestring = PLAYER_STATUS, childOf = "user"}),
             }}),
             ArrayField:new({name = "Games", sizeOf = "games", fields = {
-                Field:new({name = "Game Name", type = ftypes.STRINGZ,  encoding = ENC_ISO_8859_1, parentId = "game", childOf = "games"}),
+                Field:new({name = "Game Name", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1, parentId = "game", childOf = "games"}),
                 Field:new({name = "Game ID", type = ftypes.UINT8, size = 4, childOf = "game"}),
                 Field:new({name = "Emulator Name", type = ftypes.STRINGZ, childOf = "game"}),
                 Field:new({name = "Owner", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1, childOf = "game"}),
@@ -153,10 +153,10 @@ TYPES_KAILLERA = {
         fields = {
             Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
             Field:new({name = "Number of Players", type = ftypes.UINT8, size = 4}),
-            Field:new({name = "Username", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1, client = 0}),
-            Field:new({name = "Ping (ms)", type = ftypes.UINT8, size = 4, client = 0}),
-            Field:new({name = "User ID", type = ftypes.UINT8, size = 2, client = 0}),
-            Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE}),
+            --Field:new({name = "Username", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1, client = 0}),
+            --Field:new({name = "Ping (ms)", type = ftypes.UINT8, size = 4, client = 0}),
+            --Field:new({name = "User ID", type = ftypes.UINT8, size = 2, client = 0}),
+            --Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE}),
         }
     }),
     [0xE] = Message:new({
@@ -196,8 +196,8 @@ TYPES_KAILLERA = {
         name = "GAME_DATA",
         fields = {
             Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
-            Field:new({name = "Length", type = ftypes.UINT8, size = 2}),
-            Field:new({name = "Data", type = ftypes.BYTES}),
+            Field:new({name = "Length", type = ftypes.UINT8, size = 2, parentId = "length"}),
+            Field:new({name = "Data", type = ftypes.BYTES, sizeOf = "length"}),
             -- TODO: parse data
         }
     }),

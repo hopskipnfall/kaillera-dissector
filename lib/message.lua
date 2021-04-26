@@ -22,14 +22,14 @@ function Message:dissect(protoFields, data, tree)
 end
 
 function Message:dissectField(field, data)
-    field:setData(data)
+    field:setData(data, self.hierarchy)
 
     if self.origin ~= "unknown" then return end
 
     local client = field.client == 0 and field.value:bytes() == ByteArray.new("00")
     local server = field.server == 0 and field.value:bytes() == ByteArray.new("00")
     if client and not server then self.origin = "client" return end
-    if server and not client then self.origin "server" return end
+    if server and not client then self.origin = "server" return end
 
     self.origin = "unknown"
 end

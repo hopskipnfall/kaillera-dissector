@@ -30,8 +30,6 @@ local function hello_dood_heuristic(tvb, pinfo, tree)
     local client_hello = string.match(message, RAW_KAILLERA.client_hello)
     local server_hello = string.match(message, RAW_KAILLERA.server_hello)
 
-    Message.static:buildProtoFields(TYPES_KAILLERA, "debug")
-
     if client_hello then
         -- just add the ports for now
         -- only mark this as kaillera on server hello
