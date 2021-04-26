@@ -18,7 +18,9 @@ function Message:dissect(protoFields, data, tree)
     self.origin = "unknown"
     self.hierarchy.default = {field = nil, tree = tree}
 
-    self:dissectSection(protoFields, data:range(1):tvb(), self.fields)
+    if #(self.fields) > 0 then
+        self:dissectSection(protoFields, data:range(1):tvb(), self.fields)
+    end
 end
 
 function Message:dissectField(field, data)

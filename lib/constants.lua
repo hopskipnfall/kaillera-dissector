@@ -237,3 +237,105 @@ TYPES_KAILLERA = {
         }
     }),
 }
+
+-- okai constants
+OKAI_PROTOCOL = "OpenKaillera"
+
+TYPES_OKAI = {
+    [0x00] = Message:new({
+        name = "LOGN_REQ",
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRING, size = 32}),
+            Field:new({name = "Emulator Name", type = ftypes.STRING, size = 128}),
+        },
+    }),
+    [0x10] = Message:new({
+        name = "LOGN_RPOS",
+        fields = {},
+    }),
+    [0x01] = Message:new({
+        name = "PING_PING",
+        fields = {},
+    }),
+    [0x11] = Message:new({
+        name = "PING_ECHO",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+    [0x02] = Message:new({
+        name = "PREADY_READY",
+        fields = {},
+    }),
+    [0x12] = Message:new({
+        name = "PREADY_NREADY",
+        fields = {},
+    }),
+    [0x03] = Message:new({
+        name = "TSYNC",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+    [0x13] = Message:new({
+        name = "TSYNC_FORCE",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+    [0x23] = Message:new({
+        name = "TSYNC_CHECK",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+    [0x43] = Message:new({
+        name = "TSYNC_ADJUST",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+    [0x04] = Message:new({
+        name = "TTIME",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+    [0x05] = Message:new({
+        name = "LOAD_LOAD",
+        fields = {},
+    }),
+    [0x15] = Message:new({
+        name = "LOAD_LOADED",
+        fields = {},
+    }),
+    [0x06] = Message:new({
+        name = "START",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+    [0x07] = Message:new({
+        name = "DATA",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+    [0x08] = Message:new({
+        name = "DROP",
+        fields = {},
+    }),
+    [0x09] = Message:new({
+        name = "CHAT",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.BYTES, size = 4}),
+            Field:new({name = "Message", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1}),
+        },
+    }),
+    [0x0a] = Message:new({
+        name = "EXIT",
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
+    }),
+}
