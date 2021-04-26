@@ -78,7 +78,11 @@ function kaillera.dissector(tvb, pinfo, tree)
 
         if messageType then
             messageType.protocol = KAILLERA_PROTOCOL
-            messageType:dissect(kaillera.fields, tvb:range(offset + 4, len:le_uint()), data)
+
+            if len:le_uint() > 1 then
+                messageType:dissect(kaillera.fields, tvb:range(offset + 4, len:le_uint()), data)
+            end
+
             message:set_len(len:le_uint() + 4)
         end
 

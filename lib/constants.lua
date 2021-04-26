@@ -255,7 +255,9 @@ TYPES_OKAI = {
     }),
     [0x01] = Message:new({
         name = "PING_PING",
-        fields = {},
+        fields = {
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+        },
     }),
     [0x11] = Message:new({
         name = "PING_ECHO",

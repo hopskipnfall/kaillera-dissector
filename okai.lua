@@ -36,7 +36,12 @@ function okai.dissector(tvb, pinfo, tree)
 
         if messageType then
             messageType.protocol = OKAI_PROTOCOL
-            messageType:dissect(okai.fields, tvb:range(offset + 2, len:le_uint()), data)
+
+            -- sometimes messages don't have any data
+            if len:le_uint() > 1 then
+                messageType:dissect(okai.fields, tvb:range(offset + 2, len:le_uint()), data)
+            end
+
             message:set_len(len:le_uint() + 2)
         end
 
