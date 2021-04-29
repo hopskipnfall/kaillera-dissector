@@ -13,7 +13,7 @@ function Field:initialize(args)
     self.childOf = args.childOf or "default"
     self.client = args.client or 1
     self.hidden = args.hidden or 0
-    self.parentId = args.parentId or 0
+    self.refName = args.refName or 0
     self.server = args.server or 1
     self.size = args.size or nil
     self.sizeOf = args.sizeOf or nil
@@ -26,7 +26,9 @@ function Field:initialize(args)
 
     -- optional arguments for Tree
     self.encoding = args.encoding or nil
+    self.treeOnly = args.treeOnly or nil
 
+    self.safe_name = string.lower(self.name:gsub(" ", "_"))
     self.realSize = nil
     self.value = nil
 end
@@ -35,11 +37,17 @@ function Field:addToTree(trees, protoFields, name, origin)
     local parent = trees[self.childOf] and self.childOf or "default"
 
     if not self:isHidden(origin) then
-        if self.encoding then
-            return trees[parent].tree:add_packet_field(protoFields[name], self.value, self.encoding)
+        local newtree = nil
+
+        if self.treeOnly then
+            newtree = trees[parent].tree:add(self.name)
+        elseif self.encoding then
+            newtree = trees[parent].tree:add_packet_field(protoFields[name], self.value, self.encoding)
         else
-            return trees[parent].tree:add_le(protoFields[name], self.value)
+            newtree = trees[parent].tree:add_le(protoFields[name], self.value)
         end
+
+        if newtree then return newtree end
     end
 
     return trees
@@ -52,6 +60,7 @@ function Field:isHidden(source)
 end
 
 function Field:protoField(abbr)
+    --if self.treeOnly then return ProtoField.none(abbr, self.name, self.desc) end
     return ProtoField.new(self.name, abbr, self.type, self.valuestring, self.base, self.mask, self.desc)
 end
 
@@ -60,8 +69,8 @@ function Field:setData(data, trees)
     if trees and self.sizeOf then
         size = self.size and self.size or trees[self.sizeOf].field.value:le_uint()
     end
-
     self.realSize = (size ~= 0) and size or data:range():strsize()
+
     self.value = data:range(0, self.realSize)
 end
 

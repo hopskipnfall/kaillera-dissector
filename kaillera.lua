@@ -4,7 +4,10 @@
 require "lib.constants"
 local Message = require "lib.message"
 
-local kaillera = Proto("kaillera","Kaillera Middleware Protocol")
+KAILLERA_PROTOCOL = "Kaillera"
+KAILLERA_DESCRIPTION = "Kaillera Middleware Protocol"
+
+local kaillera = Proto(string.lower(KAILLERA_PROTOCOL), KAILLERA_DESCRIPTION)
 kaillera.fields = {}
 local fields = kaillera.fields
 
@@ -15,27 +18,29 @@ fields.server_hello = ProtoField.stringz("kaillera.server_hello", "Server")
 fields.server_pong  = ProtoField.stringz("kaillera.server_pong", "Server")
 fields.server_port  = ProtoField.stringz("kaillera.server_port", "Port")
 
--- typed types
+-- typed messages
 fields.msg_count    = ProtoField.uint8("kaillera.cnt", "Messages")
 fields.msg_id       = ProtoField.uint16("kaillera.id", "Message ID")
 fields.msg_length   = ProtoField.uint16("kaillera.len", "Length")
-fields.msg_type     = ProtoField.uint8("kaillera.type", "Type", base.HEX, Message.static:buildMessageTypes(TYPES_KAILLERA))
+fields.msg_type     = ProtoField.uint8("kaillera.type", "Type", base.HEX, Message.static:buildMessageTypes(KAILLERA_TYPES))
 
-for message, proto in pairs(Message.static:buildProtoFields(TYPES_KAILLERA, KAILLERA_PROTOCOL)) do
+-- generated fields
+for message, proto in pairs(Message.static:buildProtoFields(KAILLERA_TYPES, KAILLERA_PROTOCOL)) do
     fields[message] = proto
 end
 
 local function hello_dood_heuristic(tvb, pinfo, tree)
     local message = tvb():range():stringz()
-    local client_hello = string.match(message, RAW_KAILLERA.client_hello)
-    local server_hello = string.match(message, RAW_KAILLERA.server_hello)
+    local client_hello = string.match(message, KAILLERA_RAW.client_hello)
+    local server_hello = string.match(message, KAILLERA_RAW.server_hello)
+
+    Message.static:buildProtoFields(KAILLERA_TYPES, "test")
 
     if client_hello then
-        -- just add the ports for now
-        -- only mark this as kaillera on server hello
         DissectorTable.get("udp.port"):add(pinfo.src_port, kaillera)
         DissectorTable.get("udp.port"):add(pinfo.dst_port, kaillera)
         tree:add_le(fields.client_hello, message)
+        -- only mark this as kaillera on server hello
         return false
     end
 
@@ -47,8 +52,8 @@ local function hello_dood_heuristic(tvb, pinfo, tree)
     end
 
     -- handle excess raw messages too (ping/pong)
-    if string.match(message, RAW_KAILLERA.client_ping) then tree:add_le(fields.client_ping, message) end
-    if string.match(message, RAW_KAILLERA.server_pong) then tree:add_le(fields.server_pong, message) end
+    if string.match(message, KAILLERA_RAW.client_ping) then tree:add_le(fields.client_ping, message) end
+    if string.match(message, KAILLERA_RAW.server_pong) then tree:add_le(fields.server_pong, message) end
     return false
 end
 
@@ -56,7 +61,8 @@ function kaillera.dissector(tvb, pinfo, tree)
     pinfo.cols.protocol = KAILLERA_PROTOCOL
     local payload = tree:add(kaillera, tvb())
 
-    for _, message in pairs(RAW_KAILLERA) do
+    -- handle raw messages
+    for _, message in pairs(KAILLERA_RAW) do
         if string.match(tvb():range():stringz(), message) then
             hello_dood_heuristic(tvb, pinfo, payload)
             return true
@@ -74,11 +80,10 @@ function kaillera.dissector(tvb, pinfo, tree)
 
         local type = tvb:range(offset + 4, 1)
         local data = message:add_le(fields.msg_type, type)
-        local messageType = TYPES_KAILLERA[type:int()]
+        local messageType = KAILLERA_TYPES[type:int()]
 
         if messageType then
             messageType.protocol = KAILLERA_PROTOCOL
-
             if len:le_uint() > 1 then
                 messageType:dissect(kaillera.fields, tvb:range(offset + 4, len:le_uint()), data)
             end
@@ -90,4 +95,5 @@ function kaillera.dissector(tvb, pinfo, tree)
     end
 end
 
+-- autodetect kaillera middleware messages
 kaillera:register_heuristic("udp", hello_dood_heuristic)
