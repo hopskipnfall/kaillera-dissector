@@ -33,8 +33,8 @@ The included libraries (`lib/*`) are OOP classes using [middleclass](https://git
 
 # Acknowledgements
 
-- [middleclass](https://github.com/kikito/middleclass) library
 - Anthem, SupraFast, Moosehead, and anyone else who helped analyze kaillera
+- [middleclass](https://github.com/kikito/middleclass) library
 
 # License
 
