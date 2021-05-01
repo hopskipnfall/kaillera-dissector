@@ -22,6 +22,26 @@ for message, proto in pairs(Message.static:buildProtoFields(OKAI_TYPES, OKAI_PRO
     fields[message] = proto
 end
 
+local function login_request_heuristic(tvb, pinfo, tree)
+    local message = tvb():range(0, 4):bytes()
+    local client_request = ByteArray.new("0100a100")
+    local server_accept = ByteArray.new("0100a110")
+
+    if message == client_request then
+        DissectorTable.get("udp.port"):add(pinfo.src_port, okai)
+        DissectorTable.get("udp.port"):add(pinfo.dst_port, okai)
+        -- only mark this as open kaillera on server accept
+        return true
+    end
+
+    if message == server_accept then
+        DissectorTable.get("udp.port"):add(server_accept, okai)
+        return true
+    end
+
+    return false
+end
+
 function okai.dissector(tvb, pinfo, tree)
     pinfo.cols.protocol = OKAI_PROTOCOL
     local payload = tree:add(okai, tvb())
@@ -49,7 +69,5 @@ function okai.dissector(tvb, pinfo, tree)
     end
 end
 
--- TODO: heuristic might not be possible, add a way to set this, Pref?
-for i = 27000, 28000, 1 do
-    DissectorTable.get("udp.port"):add(i, okai)
-end
+-- autodetect open kaillera messages
+okai:register_heuristic("udp", login_request_heuristic)

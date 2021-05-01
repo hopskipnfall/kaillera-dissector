@@ -34,8 +34,6 @@ local function hello_dood_heuristic(tvb, pinfo, tree)
     local client_hello = string.match(message, KAILLERA_RAW.client_hello)
     local server_hello = string.match(message, KAILLERA_RAW.server_hello)
 
-    Message.static:buildProtoFields(KAILLERA_TYPES, "test")
-
     if client_hello then
         DissectorTable.get("udp.port"):add(pinfo.src_port, kaillera)
         DissectorTable.get("udp.port"):add(pinfo.dst_port, kaillera)

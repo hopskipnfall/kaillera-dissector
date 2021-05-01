@@ -207,7 +207,12 @@ OKAI_TYPES = {
             Field:new({name = "Emulator Name", type = ftypes.STRING, size = 128}),
         },
     }),
-    [0x10] = Message:new({name = "CLIENT_ACCEPT", fields = {}}),
+    [0x10] = Message:new({name = "CLIENT_ACCEPT",
+        fields = {
+            Field:new({name = "Username", type = ftypes.STRING, size = 32}),
+            Field:new({name = "Game Name", type = ftypes.STRING, size = 128}),
+        }
+    }),
     [0x20] = Message:new({name = "CLIENT_REJECT", fields = {}}),
     -- TODO: figure out the unknowns and varying length of message
     [0x01] = Message:new({name = "PING_PING",
