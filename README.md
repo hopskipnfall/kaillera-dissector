@@ -24,8 +24,11 @@ The included libraries (`lib/*`) are OOP classes using [middleclass](https://git
 
 - [x] Basic Kaillera and Open Kaillera support
 - [x] Dissector hueristics
+- [ ] Identify the few remaining unknown fields
 - [ ] Formatter support to process the data further
 - [ ] Decode game data per-emulator
+- [ ] Implement preferences support for emulator selection ([Pref](https://www.wireshark.org/docs/wsdg_html_chunked/lua_module_Proto.html))
+- [ ] Add some anonymous sample PCAP files
 - [ ] Refactor library out into [LuaRocks](https://luarocks.org/) package
 
 # Acknowledgements
