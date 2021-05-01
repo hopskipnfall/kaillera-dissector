@@ -1,7 +1,7 @@
 -- kaillera.lua
 -- http://kaillera.com/
 
-require "lib.constants"
+require "constants"
 local Message = require "lib.message"
 
 KAILLERA_PROTOCOL = "Kaillera"

@@ -1,7 +1,7 @@
 -- okai.lua
 -- http://p2p.okai.ru/
 
-require "lib.constants"
+require "constants"
 local Message = require "lib.message"
 
 OKAI_PROTOCOL = "Okai"
