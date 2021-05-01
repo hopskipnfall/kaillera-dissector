@@ -120,7 +120,6 @@ KAILLERA_TYPES = {
             Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE}),
         },
     }),
-    -- TODO: a spec document suggested ther was more than 2 fields
     [0xD] = Message:new({name = "GAME_PLAYER",
         fields = {
             Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
