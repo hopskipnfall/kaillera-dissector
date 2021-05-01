@@ -57,6 +57,15 @@ local function hello_dood_heuristic(tvb, pinfo, tree)
     return false
 end
 
+local function origin_heuristic(field)
+    local client = field.client == 0 and field.value:bytes() == ByteArray.new("00")
+    local server = field.server == 0 and field.value:bytes() == ByteArray.new("00")
+
+    if client and not server then return "client" end
+    if server and not client then return "server" end
+    return "unknown"
+end
+
 function kaillera.dissector(tvb, pinfo, tree)
     pinfo.cols.protocol = KAILLERA_PROTOCOL
     local payload = tree:add(kaillera, tvb())
@@ -84,10 +93,9 @@ function kaillera.dissector(tvb, pinfo, tree)
 
         if messageType then
             messageType.protocol = KAILLERA_PROTOCOL
-            if len:le_uint() > 1 then
-                messageType:dissect(kaillera.fields, tvb:range(offset + 4, len:le_uint()), data)
-            end
+            messageType.isOrigin = origin_heuristic
 
+            messageType:dissect(kaillera.fields, tvb:range(offset + 4, len:le_uint()), data)
             message:set_len(len:le_uint() + 4)
         end
 

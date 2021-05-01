@@ -16,7 +16,7 @@ function ArrayField:initialize(args)
     assert(self.size or self.sizeOf)
 
     -- optional arguments for Message
-    self.childOf = args.childOf or "default"
+    self.childOf = args.childOf or "message"
     self.client = args.client or 1
     self.hidden = args.hidden or 0
     self.refName = args.refName or 0
@@ -33,12 +33,13 @@ function ArrayField:initialize(args)
         end
     end
 
-    self.safe_name = string.lower(self.name:gsub(" ", "_"))
+    self.invalid = false
     self.count = nil
 end
 
 function ArrayField:setSize(trees)
-    self.count = self.size and self.size or trees[self.sizeOf].field.value:le_uint()
+    self.count = self.size and self.size or trees[self.sizeOf].data:le_uint()
+    self.invalid = self.count == 0 and "Array is empty" or false
 end
 
 return ArrayField

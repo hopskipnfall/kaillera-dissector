@@ -10,7 +10,7 @@ function Field:initialize(args)
     self.type = assert(args.type)
 
     -- optional arguments for Message
-    self.childOf = args.childOf or "default"
+    self.childOf = args.childOf or "message"
     self.client = args.client or 1
     self.hidden = args.hidden or 0
     self.refName = args.refName or 0
@@ -28,15 +28,20 @@ function Field:initialize(args)
     self.encoding = args.encoding or nil
     self.treeOnly = args.treeOnly or nil
 
-    self.safe_name = string.lower(self.name:gsub(" ", "_"))
+    self.invalid = false
     self.realSize = nil
     self.value = nil
 end
 
+-- TODO: add formatter, prefix, and suffix support
 function Field:addToTree(trees, protoFields, name, origin)
-    local parent = trees[self.childOf] and self.childOf or "default"
+    local parent = trees[self.childOf] and self.childOf or "message"
 
-    if not self:isHidden(origin) then
+    if self.invalid then
+        return trees[parent].tree:add(string.format("%s: [%s]", self.name, self.invalid))
+    end
+
+    if not self:isHidden(origin) and not self.invalid then
         local newtree = nil
 
         if self.treeOnly then
@@ -60,18 +65,30 @@ function Field:isHidden(source)
 end
 
 function Field:protoField(abbr)
-    --if self.treeOnly then return ProtoField.none(abbr, self.name, self.desc) end
     return ProtoField.new(self.name, abbr, self.type, self.valuestring, self.base, self.mask, self.desc)
 end
 
 function Field:setData(data, trees)
     local size = self.size
-    if trees and self.sizeOf then
-        size = self.size and self.size or trees[self.sizeOf].field.value:le_uint()
-    end
-    self.realSize = (size ~= 0) and size or data:range():strsize()
+    self.invalid = false
 
-    self.value = data:range(0, self.realSize)
+    -- handle sizeOf variable length
+    if trees and self.sizeOf then
+        size = self.size and self.size or trees[self.sizeOf].data:len()
+        if size > data:len() then size = data:len() end
+    end
+
+    -- make sure the size is never more than the buffer
+    if data:len() == 0 then self.invalid = "No space left for field data" end
+    if (size or 0) > data:len() then self.invalid = "Not enough space for field data" end
+
+    if self.invalid then
+        self.realSize = data:len()
+        self.value = ByteArray.new("00"):tvb("Invalid"):range()
+    else
+        self.realSize = (size ~= 0) and size or data:range():strsize()
+        self.value = data:range(0, self.realSize)
+    end
 end
 
 return Field

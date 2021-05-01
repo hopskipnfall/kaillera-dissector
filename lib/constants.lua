@@ -6,6 +6,7 @@ local Message = require "lib.message"
 
 -- kaillera constants
 CONNECTION_TYPE = {[1] = "LAN", [2] = "Excellent", [3] = "Good", [4] = "Average", [5] = "Low", [6] = "Bad"}
+CONNECTION_TYPE_2 = {[0] = "LAN", [1] = "Excellent", [2] = "Good", [3] = "Average", [4] = "Low", [5] = "Bad"}
 GAME_STATUS = {[0] = "Waiting", [1] = "Playing", [2] = "Syncing"}
 PLAYER_STATUS = {[0] = "Playing", [1] = "Waiting"}
 
@@ -47,7 +48,7 @@ KAILLERA_TYPES = {
             ArrayField:new({name = "Player List", sizeOf = "players", fields = {
                 Field:new({name = "Username", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1, refName = "user", childOf = "players"}),
                 Field:new({name = "Ping (ms)", type = ftypes.UINT8, size = 4, childOf = "user"}),
-                Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE, childOf = "user"}),
+                Field:new({name = "Connection Type", type = ftypes.UINT8, size = 1, valuestring = CONNECTION_TYPE_2, childOf = "user"}),
                 Field:new({name = "User ID", type = ftypes.UINT8, size = 2, base = base.HEX, childOf = "user"}),
                 Field:new({name = "Player Status", type = ftypes.UINT8, size = 1, valuestring = PLAYER_STATUS, childOf = "user"}),
             }}),
@@ -162,8 +163,8 @@ KAILLERA_TYPES = {
     [0x12] = Message:new({name = "GAME_DATA",
         fields = {
             Field:new({name = "Empty", type = ftypes.STRINGZ, hidden = 1}),
-            Field:new({name = "Length", type = ftypes.UINT8, size = 2, refName = "length"}),
-            Field:new({name = "Data", type = ftypes.BYTES, sizeOf = "length"}),
+            Field:new({name = "Length", type = ftypes.UINT8, size = 2}),
+            Field:new({name = "Data", type = ftypes.BYTES, sizeOf = "message"}),
         }
     }),
     [0x13] = Message:new({name = "GAME_CACHE",
@@ -200,13 +201,14 @@ KAILLERA_TYPES = {
 
 -- okai constants
 OKAI_TYPES = {
-    [0x00] = Message:new({name = "LOGN_REQ",
+    [0x00] = Message:new({name = "CLIENT_REQUEST",
         fields = {
             Field:new({name = "Username", type = ftypes.STRING, size = 32}),
             Field:new({name = "Emulator Name", type = ftypes.STRING, size = 128}),
         },
     }),
-    [0x10] = Message:new({name = "LOGN_RPOS", fields = {}}),
+    [0x10] = Message:new({name = "CLIENT_ACCEPT", fields = {}}),
+    [0x20] = Message:new({name = "CLIENT_REJECT", fields = {}}),
     -- TODO: figure out the unknowns and varying length of message
     [0x01] = Message:new({name = "PING_PING",
         fields = {
@@ -222,54 +224,60 @@ OKAI_TYPES = {
     }),
     [0x11] = Message:new({name = "PING_ECHO",
         fields = {
-            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+            Field:new({name = "Core State", type = ftypes.NONE, refName = "core", treeOnly = 1}),
+            Field:new({name = "Unknown", type = ftypes.BYTES, size = 4, childOf = "core"}),
+            Field:new({name = "Host", type = ftypes.BOOLEAN, size = 1, childOf = "core"}),
+            Field:new({name = "Unknown", type = ftypes.BYTES, size = 3, childOf = "core"}),
+            Field:new({name = "Port", type = ftypes.UINT8, size = 2, base = base.DEC, childOf = "core"}),
+            Field:new({name = "Unknown", type = ftypes.BYTES, size = 2, childOf = "core"}),
+            Field:new({name = "Peer IP", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1, childOf = "core"}),
+            Field:new({name = "Unknown", type = ftypes.BYTES, size = 4, childOf = "core"}),
         },
     }),
-    [0x02] = Message:new({name = "PREADY_READY", fields = {}}),
-    [0x12] = Message:new({name = "PREADY_NREADY", fields = {}}),
-    [0x03] = Message:new({name = "TSYNC",
-        fields = {
-            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+    [0x02] = Message:new({name = "PLAYER_READY", fields = {}}),
+    [0x12] = Message:new({name = "PLAYER_NOT_READY", fields = {}}),
+    [0x03] = Message:new({name = "SYNC", fields = {
+            -- this message type is never sent directly
         },
     }),
-    [0x13] = Message:new({name = "TSYNC_FORCE",
+    [0x13] = Message:new({name = "SYNC_INIT",
         fields = {
-            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+            Field:new({name = "Initial Value (ms)", type = ftypes.UINT8, size = 4}),
         },
     }),
-    [0x23] = Message:new({name = "TSYNC_CHECK",
+    [0x23] = Message:new({name = "SYNC_GUESS",
         fields = {
-            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+            Field:new({name = "Offset Guess (ms)", type = ftypes.UINT8, size = 4}),
         },
     }),
-    [0x43] = Message:new({name = "TSYNC_ADJUST",
+    [0x43] = Message:new({name = "SYNC_ADJUST",
         fields = {
-            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+            Field:new({name = "Offset Adjust (ms)", type = ftypes.INT8, size = 4}),
         },
     }),
     [0x04] = Message:new({name = "TTIME",
         fields = {
-            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+            Field:new({name = "Unknown", type = ftypes.UINT8, size = 4}),
         },
     }),
-    [0x05] = Message:new({name = "LOAD_LOAD", fields = {}}),
-    [0x15] = Message:new({name = "LOAD_LOADED", fields = {}}),
-    [0x06] = Message:new({name = "START",
+    [0x05] = Message:new({name = "GAME_LOAD", fields = {}}),
+    [0x15] = Message:new({name = "GAME_LOADED", fields = {}}),
+    [0x06] = Message:new({name = "GAME_START",
         fields = {
-            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+            Field:new({name = "Tick Count", type = ftypes.UINT8, size = 4}),
         },
     }),
-    [0x07] = Message:new({name = "DATA",
+    [0x07] = Message:new({name = "GAME_DATA",
         fields = {
-            Field:new({name = "Unknown", type = ftypes.UINT8, size = 1}),
+            Field:new({name = "Game Data", type = ftypes.BYTES, sizeOf = "message"}),
         },
     }),
-    [0x08] = Message:new({name = "DROP", fields = {}}),
-    [0x09] = Message:new({name = "CHAT",
+    [0x08] = Message:new({name = "GAME_DROP", fields = {}}),
+    [0x09] = Message:new({name = "PLAYER_CHAT",
         fields = {
             Field:new({name = "Frame Number (+5?)", type = ftypes.UINT8, base = base.DEC, size = 4}),
             Field:new({name = "Message", type = ftypes.STRINGZ, encoding = ENC_ISO_8859_1}),
         },
     }),
-    [0x0a] = Message:new({name = "EXIT", fields = {}}),
+    [0x0a] = Message:new({name = "CLIENT_EXIT", fields = {}}),
 }
