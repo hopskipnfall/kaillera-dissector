@@ -6,9 +6,7 @@ Wireshark plugin to decode kaillera middleware and p2p packets
 - Install [Wireshark](https://www.wireshark.org/#download)
 - Download an emulator with [Kaillera](http://kaillera.com/download.php) support (for server)
 - Download an emualtor with [Kaillera P2P](http://p2p.kaillera.ru/#) support (for p2p)
-- [Download](https://github.com/smash64-dev/kaillera-dissector/archive/refs/heads/main.zip) or clone this into Wireshark's plugin directory
-
-  In Wireshark: **Help > About Wireshark > Folders > Personal Lua Plugins**
+- [Download](https://github.com/smash64-dev/kaillera-dissector/archive/refs/heads/main.zip) or clone this into Wireshark's plugin directory (**Help > About Wireshark > Folders > Personal Lua Plugins**)
 
 # Usage
 
