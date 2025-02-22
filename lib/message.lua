@@ -1,8 +1,8 @@
 -- message.lua
 
-local class = require "lib.middleclass"
-local ArrayField = require "lib.arrayfield"
-local Field = require "lib.field"
+local class = require "middleclass"
+local ArrayField = require "arrayfield"
+local Field = require "field"
 local Message = class("Message")
 
 function Message:initialize(args)

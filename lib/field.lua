@@ -1,6 +1,6 @@
 -- field.lua
 
-local class = require "lib.middleclass"
+local class = require "middleclass"
 local Field = class("Field")
 
 function Field:initialize(args)

@@ -1,7 +1,7 @@
 -- arrayfield.lua
 
-local class = require "lib.middleclass"
-local Field = require "lib.field"
+local class = require "middleclass"
+local Field = require "field"
 local ArrayField = class("ArrayField")
 
 function ArrayField:initialize(args)
